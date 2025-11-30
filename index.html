@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Todo + Image</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 2rem;
+        max-width: 800px;
+      }
+      .todo {
+        border: 1px solid #ccc;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+      }
+      .todo img {
+        max-height: 150px;
+        margin-top: 0.5rem;
+      }
+      .error {
+        color: red;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+      #preview {
+        max-width: 300px;
+        margin-top: 0.5rem;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Todo List with Images</h1>
+
+    <div id="addForm">
+      <input type="text" id="textInput" placeholder="What needs to be done?" />
+      <input type="file" id="imageInput" accept="image/*" />
+      <img id="preview" alt="preview" />
+      <button id="addBtn">Add Todo</button>
+      <p id="status"></p>
+    </div>
+
+    <h2>Todos</h2>
+    <div id="todos"></div>
+
+    <script>
+      const $ = document.querySelector.bind(document);
+
+      const textInput = $("#textInput");
+      const imageInput = $("#imageInput");
+      const preview = $("#preview");
+      const addBtn = $("#addBtn");
+      const status = $("#status");
+      const todosDiv = $("#todos");
+
+      imageInput.addEventListener("change", () => {
+        const file = imageInput.files[0];
+        if (!file) {
+          preview.style.display = "none";
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.src = e.target.result;
+          preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      });
+
+      addBtn.addEventListener("click", async () => {
+        const text = textInput.value.trim();
+        if (!text) {
+          status.textContent = "Please enter a todo text.";
+          status.className = "error";
+          return;
+        }
+
+        const form = new FormData();
+        form.append("text", text);
+        if (imageInput.files[0]) form.append("photo", imageInput.files[0]);
+
+        try {
+          const res = await fetch("/todos", { method: "POST", body: form });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "failed");
+          status.textContent = "Todo added!";
+          status.className = "";
+          textInput.value = "";
+          imageInput.value = "";
+          preview.style.display = "none";
+          loadTodos(); // refresh list
+        } catch (err) {
+          status.textContent = "Error: " + err.message;
+          status.className = "error";
+        }
+      });
+
+      async function loadTodos() {
+        const res = await fetch("/todos");
+        const todos = await res.json();
+        todosDiv.innerHTML = "";
+        todos.forEach((t) => {
+          const div = document.createElement("div");
+          div.className = "todo";
+          div.innerHTML = `<strong>${escapeHtml(t.text)}</strong>`;
+          if (t.image) {
+            div.innerHTML += `<br><img src="${t.image}" alt="todo image">`;
+          }
+          todosDiv.appendChild(div);
+        });
+      }
+
+      function escapeHtml(s) {
+        const div = document.createElement("div");
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      loadTodos();
+    </script>
+  </body>
+</html>
