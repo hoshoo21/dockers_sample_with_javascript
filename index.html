@@ -57,6 +57,7 @@
       const addBtn = $("#addBtn");
       const status = $("#status");
       const todosDiv = $("#todos");
+      const baseUrl = 'http://localhost:3000';
 
       imageInput.addEventListener("change", () => {
         const file = imageInput.files[0];
@@ -85,7 +86,7 @@
         if (imageInput.files[0]) form.append("photo", imageInput.files[0]);
 
         try {
-          const res = await fetch("/todos", { method: "POST", body: form });
+          const res = await fetch(`${baseUrl}/todos`, { method: "POST", body: form });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || "failed");
           status.textContent = "Todo added!";
@@ -101,7 +102,7 @@
       });
 
       async function loadTodos() {
-        const res = await fetch("/todos");
+        const res = await fetch(`${baseUrl}/todos`);
         const todos = await res.json();
         todosDiv.innerHTML = "";
         todos.forEach((t) => {

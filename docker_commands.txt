@@ -1,0 +1,17 @@
+#running mongo container 
+ docker run -p 27017:27017 -d `
+>>   -e MONGO_INITDB_ROOT_USERNAME=admin `
+>>   -e MONGO_INITDB_ROOT_PASSWORD=test123 `
+>>   --name mongo `
+>>   --network mongo-network `
+>>   mongo
+
+#running mongo express 
+docker run -d `
+>> -e ME_CONFIG_MONGODB_ADMINUSERNAME=admin `
+>> -e ME_CONFIG_MONGODB_ADMINPASSWORD=test123 `
+>> -e ME_CONFIG_MONGODB_SERVER=mongo `
+>> --name mongo-express `
+>> --network mongo-network `
+>> -p 8081:8081 `
+>> mongo-express
